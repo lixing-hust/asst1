@@ -321,7 +321,7 @@ float arraySumVector(float* values, int N) {
 
   }
 
-  for(int i=VECTOR_WIDTH;i>1;i/=2){
+  for(int i=VECTOR_WIDTH;i>1;i/=2){//compute sum
     _cs149_hadd_float(result,result);
     _cs149_interleave_float(result,result);
   }
