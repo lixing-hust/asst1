@@ -249,7 +249,46 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // Your solution should work for any value of
   // N and VECTOR_WIDTH, not just when VECTOR_WIDTH divides N
   //
-  
+  __cs149_vec_float x;
+  __cs149_vec_int exp;
+  __cs149_vec_float result;
+  __cs149_vec_float nine = _cs149_vset_float(9.999999f);
+  __cs149_vec_int one = _cs149_vset_int(1);
+  __cs149_vec_int zero = _cs149_vset_int(0);
+  __cs149_mask maskAll, maskIsNegative, maskForNine,maskForZero;
+
+  for(int i=0;i<N;i+=VECTOR_WIDTH){
+    maskAll = _cs149_init_ones();
+    maskIsNegative = _cs149_init_ones(0);
+    maskForNine = _cs149_init_ones(0);
+    maskForZero = _cs149_init_ones(0);
+    if(N-i<VECTOR_WIDTH)
+      maskAll = _cs149_init_ones(N-i);
+
+    _cs149_vload_float(x,values+i,maskAll);//x=value[i]
+    _cs149_vload_int(exp,exponents+i,maskAll);//exp=exponents[i]
+
+    _cs149_veq_int(maskForZero,exp,zero,maskAll);//if exp=0
+    _cs149_vset_float(x,1.f,maskForZero);//x=1.f
+
+    _cs149_vsub_int(exp,exp,one,maskAll);
+    _cs149_vgt_int(maskIsNegative, exp, zero, maskAll);
+
+    _cs149_vmove_float(result,x,maskAll);//result=x
+    while(_cs149_cntbits(maskIsNegative)!=0){
+      _cs149_vmult_float(result,result,x,maskIsNegative);//result*=x
+
+      _cs149_vsub_int(exp,exp,one,maskIsNegative);//exp--
+      _cs149_vgt_int(maskIsNegative, exp, zero, maskAll);//记录 exp>0 的位置
+
+    }
+
+    _cs149_vgt_float(maskForNine,result,nine,maskAll);//记录x>9.99999f的位置
+    _cs149_vset_float(result,9.999999f,maskForNine);//x=9.999999f  if x>9.999999f
+
+    _cs149_vstore_float(output+i,result,maskAll);//output[i]=x;
+
+  }
 }
 
 // returns the sum of all elements in values
