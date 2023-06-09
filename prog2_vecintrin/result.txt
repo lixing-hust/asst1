@@ -1,0 +1,5 @@
+size    Vector Width    Vector Utilization
+10000   2               84.9%
+10000   4               79.9%
+10000   8               77.4%
+10000   16              76.2%
