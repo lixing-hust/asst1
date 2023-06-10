@@ -28,30 +28,30 @@ void sqrtAVX(int N,
     static const float kThreshold = 0.00001f;
     __mmask8 mask;
     __m256 tmp,left,right; 
-    __m256 ONE = _mm256_set1_ps(1.f);
+    __m256 ONE = _mm256_set1_ps(1.f);//几个常量
     __m256 PointFive = _mm256_set1_ps(0.5f);
     __m256 THREE = _mm256_set1_ps(3.f);
-    __m256 ABS = _mm256_castsi256_ps(_mm256_set1_epi32(0x7fffffff));
+    __m256 ABS = _mm256_castsi256_ps(_mm256_set1_epi32(0x7fffffff));//用来求绝对值，and ABS使符号位变为0
     __m256 vector_Threshold = _mm256_set1_ps(kThreshold);
 
     for (int i=0; i<N; i+=8) {
         mask=0xff;
-        __m256 origx = _mm256_load_ps(&values[i]);
+        __m256 origx = _mm256_load_ps(&values[i]);//origx = values[i]
         __m256 vector_guess = _mm256_set1_ps(initialGuess);
         
-        tmp = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,vector_guess);
-        tmp = _mm256_mask_mul_ps(tmp,mask,tmp,origx);
-        tmp = _mm256_mask_sub_ps(tmp,mask,tmp,ONE);
-        tmp = _mm256_mask_and_ps(tmp,mask,tmp,ABS);
-        mask = mask & (_mm256_cmp_ps_mask(tmp,vector_Threshold,(unsigned char)30));
+        tmp = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,vector_guess);//tmp = guess*guess
+        tmp = _mm256_mask_mul_ps(tmp,mask,tmp,origx);//tmp=tmp*origx
+        tmp = _mm256_mask_sub_ps(tmp,mask,tmp,ONE);//tmp=tmp-1
+        tmp = _mm256_mask_and_ps(tmp,mask,tmp,ABS);//tmp=|tmp|
+        mask = mask & (_mm256_cmp_ps_mask(tmp,vector_Threshold,(unsigned char)30));//获取error大于threshold的mask
 
         while(mask){
-            left = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,THREE);
-            right = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,vector_guess);
-            right = _mm256_mask_mul_ps(right,mask,right,vector_guess);
-            right = _mm256_mask_mul_ps(right,mask,origx,right);
-            left = _mm256_mask_sub_ps(left,mask,left,right);
-            vector_guess = _mm256_mask_mul_ps(left,mask,left,PointFive);
+            left = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,THREE);//left = guess*3
+            right = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,vector_guess);//right = guess*guess
+            right = _mm256_mask_mul_ps(right,mask,right,vector_guess);//right = right*guess
+            right = _mm256_mask_mul_ps(right,mask,origx,right);//right = origx*right
+            left = _mm256_mask_sub_ps(left,mask,left,right);//left = left - right
+            vector_guess = _mm256_mask_mul_ps(left,mask,left,PointFive);//guess = left * 0.5
 
             tmp = _mm256_mask_mul_ps(vector_guess,mask,vector_guess,vector_guess);
             tmp = _mm256_mask_mul_ps(tmp,mask,tmp,origx);
@@ -60,7 +60,7 @@ void sqrtAVX(int N,
             mask = mask & (_mm256_cmp_ps_mask(tmp,vector_Threshold,(unsigned char)30));
         }
 
-        _mm256_store_ps(&output[i],vector_guess);
+        _mm256_store_ps(&output[i],vector_guess);//output[i] = guess
     }
 }
 
